@@ -3,6 +3,7 @@
 This project helps you create a playlist on Spotify and add tracks to it using the Spotify Web API. Follow the steps below to configure your Spotify API, set up your environment, and run the script.
 
 *Titles added might not be 100% accurate.*
+*Might get cover instead.*
 
 ## Prerequisites
 

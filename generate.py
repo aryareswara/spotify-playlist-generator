@@ -29,6 +29,20 @@ def get_spotify_client():
         print("No valid token available. Please check your authentication setup.")
         return None
 
+def search_for_track(sp, query):
+    try:
+        results = sp.search(q=query, limit=5, type='track')
+        if results['tracks']['items']:
+            return [track for track in results['tracks']['items'] if not any(
+                term in track['name'].lower() for term in ['cover', 'karaoke']
+            )]
+        else:
+            print(f"Track not found for query: {query}")
+            return []
+    except spotipy.SpotifyException as e:
+        print(f"Error searching for track '{query}': {e}")
+        return []
+
 sp = get_spotify_client()
 
 if sp:
@@ -47,36 +61,52 @@ if sp:
 
         # Search for each song and add it to the playlist
         track_ids = []
+        track_names = {}
+        added_track_ids = set()
+
         for title in song_titles:
-            try:
-                results = sp.search(q=title, limit=1, type='track')
-                if results['tracks']['items']:
-                    track = results['tracks']['items'][0]
-                    track_ids.append(track['id'])
-                    print(f"Added: {track['name']} by {track['artists'][0]['name']}")
+            # Search using the provided title
+            tracks = search_for_track(sp, title)
+            if tracks:
+                for track in tracks:
+                    track_id = track['id']
+                    
+                    # Check if track ID is already in the set of added IDs
+                    if track_id not in added_track_ids:
+                        track_ids.append(track_id)
+                        track_names[track_id] = f"{track['name']} by {track['artists'][0]['name']}"
+                        added_track_ids.add(track_id)
+                        print(f"Added: {track_names[track_id]}")
+                        break  # Stop after finding the first valid track
                 else:
-                    print(f"Track not found: {title}")
-            except spotipy.SpotifyException as e:
-                print(f"Error searching for track '{title}': {e}")
-                continue
+                    print(f"No valid tracks found for query: {title}")
+            else:
+                # Attempt a broader search if the initial search fails
+                variations = [
+                    f"{title} Original",
+                    f"{title} Opening",
+                    f"{title} Ending"  # Adjust based on known details about the song
+                ]
+                for variation in variations:
+                    tracks = search_for_track(sp, variation)
+                    if tracks:
+                        for track in tracks:
+                            track_id = track['id']
+                            if track_id not in added_track_ids:
+                                track_ids.append(track_id)
+                                track_names[track_id] = f"{track['name']} by {track['artists'][0]['name']}"
+                                added_track_ids.add(track_id)
+                                print(f"Added: {track_names[track_id]} (Variation)")
+                                break  # Stop after finding the first valid track
+                        break  # Stop after finding the first valid variation
 
         if track_ids:
             sp.playlist_add_items(playlist_id, track_ids)
             print(f"Tracks added to playlist '{playlist_name}'.")
 
-        # Remove duplicates from the playlist after confirming creation
-        playlist_tracks = sp.playlist_tracks(playlist_id)
-        existing_track_ids = [item['track']['id'] for item in playlist_tracks['items']]
-        unique_track_ids = list(set(existing_track_ids))
-        
-        # Remove duplicates by comparing original track IDs to the unique ones
-        if len(existing_track_ids) > len(unique_track_ids):
-            for track_id in existing_track_ids:
-                if existing_track_ids.count(track_id) > 1:
-                    sp.playlist_remove_all_occurrences_of_items(playlist_id, [track_id])
-            print(f"Removed duplicates from playlist '{playlist_name}'.")
-
         print(f"Playlist '{playlist_name}' created successfully!")
 
     except spotipy.SpotifyException as e:
         print(f"Spotify API error: {e}")
+else:
+    print("Failed to get Spotify client.")
