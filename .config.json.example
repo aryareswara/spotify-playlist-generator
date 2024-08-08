@@ -3,5 +3,5 @@
     "client_secret": "your_client_secret",
     "redirect_uri": "http://localhost:8888/callback",
     "username": "your_username",
-    "song_titles": ["your_titles"]
+    "song_titles": ["song_title_1", "song_title_2", "song_title_3"]
 }

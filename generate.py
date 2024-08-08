@@ -83,9 +83,7 @@ if sp:
             else:
                 # Attempt a broader search if the initial search fails
                 variations = [
-                    f"{title} Original",
-                    f"{title} Opening",
-                    f"{title} Ending"  # Adjust based on known details about the song
+                    f"{title}"  # Adjust based on known details about the song
                 ]
                 for variation in variations:
                     tracks = search_for_track(sp, variation)
