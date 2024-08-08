@@ -45,7 +45,7 @@ Create a file named config.json in the same directory as your script with the fo
 
 Replace "your_client_id", "your_client_secret", and "your_username" with your Spotify application's Client ID, Client Secret, and your Spotify username respectively. Add the titles of the songs you want to include in the "song_titles" array.
 
-## Step 5: Run the Script
+## Step 4: Run the Script
 To create the playlist and add the tracks, run the script using the following command:
 ```bash
 python generate.py
