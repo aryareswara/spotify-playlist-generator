@@ -1,0 +1,7 @@
+{
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret",
+    "redirect_uri": "http://localhost:8888/callback",
+    "username": "your_username",
+    "song_titles": ["your_titles"]
+}
