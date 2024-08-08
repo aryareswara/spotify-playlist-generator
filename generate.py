@@ -16,7 +16,7 @@ song_titles = config['song_titles']
 sp_oauth = SpotifyOAuth(client_id=client_id,
                         client_secret=client_secret,
                         redirect_uri=redirect_uri,
-                        scope='playlist-modify-public')
+                        scope='playlist-modify-public playlist-read-private')
 
 def get_spotify_client():
     token_info = sp_oauth.get_cached_token()
@@ -46,18 +46,35 @@ if sp:
         playlist_id = playlist['id']
 
         # Search for each song and add it to the playlist
+        track_ids = []
         for title in song_titles:
             try:
                 results = sp.search(q=title, limit=1, type='track')
                 if results['tracks']['items']:
                     track = results['tracks']['items'][0]
-                    sp.playlist_add_items(playlist_id, [track['id']])
+                    track_ids.append(track['id'])
                     print(f"Added: {track['name']} by {track['artists'][0]['name']}")
                 else:
                     print(f"Track not found: {title}")
             except spotipy.SpotifyException as e:
                 print(f"Error searching for track '{title}': {e}")
                 continue
+
+        if track_ids:
+            sp.playlist_add_items(playlist_id, track_ids)
+            print(f"Tracks added to playlist '{playlist_name}'.")
+
+        # Remove duplicates from the playlist after confirming creation
+        playlist_tracks = sp.playlist_tracks(playlist_id)
+        existing_track_ids = [item['track']['id'] for item in playlist_tracks['items']]
+        unique_track_ids = list(set(existing_track_ids))
+        
+        # Remove duplicates by comparing original track IDs to the unique ones
+        if len(existing_track_ids) > len(unique_track_ids):
+            for track_id in existing_track_ids:
+                if existing_track_ids.count(track_id) > 1:
+                    sp.playlist_remove_all_occurrences_of_items(playlist_id, [track_id])
+            print(f"Removed duplicates from playlist '{playlist_name}'.")
 
         print(f"Playlist '{playlist_name}' created successfully!")
 
